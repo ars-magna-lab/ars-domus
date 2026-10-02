@@ -19,3 +19,9 @@ __pycache__/
 
 # --- Ajustes locales de Claude Code ----------------------------------
 .claude/settings.local.json
+
+# --- Lo que se mueve en el visor (lo lee Claude y lo pasa a los datos) ---
+cambios.json
+
+# --- Las casas de verdad: privadas, nunca en este repo ---
+casas/
