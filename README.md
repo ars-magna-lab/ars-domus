@@ -131,7 +131,7 @@ flowchart LR
   GEN --> MEJ[mejora.py<br/>aplica actual]
   GEN & MEJ --> JS[casa.js<br/>generado]
   JS --> VISOR[visor.js<br/>three.js, WebGL]
-  VISOR -. correcciones, cambios.json, capturas .-> GEN
+  VISOR -.->|correcciones, cambios.json, capturas| GEN
 ```
 
 | Paso | Cómo se hace |
