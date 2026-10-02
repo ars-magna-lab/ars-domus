@@ -1,4 +1,6 @@
-# reforma-tu-casa-claude
+# Ars Domus
+
+*El arte de la casa*, en homenaje al *Ars Magna* de Ramon Llull.
 
 Tu casa en 3D con **Claude Code** y **three.js**: de un plano, unas fotos y
 datos públicos del terreno a una maqueta que se pasea en el navegador, con
@@ -8,7 +10,8 @@ los escribe en un fichero y el visor los dibuja.
 
 *Your house in 3D with Claude Code and three.js: from a floor plan, some
 photos and public land data to a walkable browser model, with the current
-house and a renovation proposal you can compare from the same viewpoint.*
+house and a renovation proposal you can compare from the same viewpoint. Ars Domus, "the art of the house", is a nod to Ramon Llull's
+Ars Magna.*
 
 Este repo está empezando: de momento solo tiene este README.
 
