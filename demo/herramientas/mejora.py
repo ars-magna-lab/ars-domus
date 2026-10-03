@@ -47,8 +47,8 @@ def aplica(casa):
     c['interior']['muebles'] = ms
     return dict(
         casa=dict(muros=c['muros'], huecos=c['huecos'], interior=c['interior']),
-        # la leña, la higuera (estorba a la pista de pádel) y los olivos de la era (la fuente)
-        quita=['lena'] + [a[4] for a in casa['arboles'] if a[0] == 'higuera' or math.hypot(a[1] + 18.0, a[2]) < 4.5],
+        # la leña, los olivos de la era (la fuente) y los árboles que caen en la pista de pádel
+        quita=['lena'] + [a[4] for a in casa['arboles'] if math.hypot(a[1] + 18.0, a[2]) < 4.5 or en_padel(a)],
         exterior=dict(
             zonas=[dict(nombre='Green de golf', mat='cesped', ref='EXT-M-green', circulo=[14.0, -14.0, 3.6],
                         idea='Un green para practicar el putt antes de coger el helicóptero.'),
@@ -76,6 +76,18 @@ def aplica(casa):
     )
 
 
+# Pista de pádel (10 × 20, a lo largo de z) junto a la linde O, lejos de la caseta y de la sauna
+PADEL = (-24.6, 18.0)
+
+
+def en_padel(arbol, margen=0.3):
+    """La copa del árbol [tipo, x, z, radio, id] pisa la pista de pádel."""
+    x0, x1, z0, z1 = PADEL[0] - 5 - margen, PADEL[0] + 5 + margen, PADEL[1] - 10 - margen, PADEL[1] + 10 + margen
+    dx = max(x0 - arbol[1], 0, arbol[1] - x1)
+    dz = max(z0 - arbol[2], 0, arbol[2] - z1)
+    return math.hypot(dx, dz) < arbol[3]
+
+
 def lujo():
     """Lo obscenamente pijo de la mejorada: cada pieza con su sitio en el mundo (x al E, z al S)."""
     def L(n, tipo, x, z, giro=0, **kw):
@@ -89,7 +101,8 @@ def lujo():
           idea='Rojo, por supuesto.'),
         L(4, 'helipuerto', 5.0, -14.0, 0, radio=4.5, grupo='Helipuerto',
           idea='Helipuerto de 9 m con su helicóptero, para no perder tiempo en el camino de entrada.'),
-        L(5, 'padel', -19.5, 19.0, 90, grupo='Pádel', idea='Pista de pádel de cristal, con focos para jugar de noche.'),
+        L(5, 'padel', PADEL[0], PADEL[1], 0, grupo='Pádel',
+          idea='Pista de pádel de cristal a lo largo de la linde O, con focos para jugar de noche.'),
         L(6, 'jacuzzi', -4.3, 21.6, 0, cota=0.3, grupo='Piscina', idea='Jacuzzi de madera en el césped de la piscina.'),
         L(7, 'chiringuito', -4.6, 14.9, 0, cota=0.3, idea='Chiringuito con palapa, barra y botellas que nadie paga.'),
         L(8, 'cine', 30.0, 22.5, 0, ancho=5.5, idea='Cine al aire libre con pufs, mirando al S.'),

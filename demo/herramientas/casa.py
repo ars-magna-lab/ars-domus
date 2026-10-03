@@ -90,7 +90,7 @@ def V(s0, ancho=1.2):                    # ventana
     return (s0, s0 + ancho, 'ventana', {})
 
 
-def P(s0, ancho=0.8, **op):              # puerta
+def P(s0, ancho=0.8, **op):              # puerta (giro=180: abierta del todo, plegada contra la pared)
     return (s0, s0 + ancho, 'puerta', op)
 
 
@@ -100,10 +100,10 @@ muro((0, 0), (20, 0), EXT, ALERO, 'piedra', 'N',
 muro((0, 0), (0, 9), EXT, ALERO, 'piedra', 'O', [V(1.6), V(6.4)])
 muro((20, 0), (20, 9), EXT, ALERO, 'piedra', 'E', [(4.6, 5.2, 'ventanuco', {}), V(6.6)])
 muro((6, 9), (20, 9), EXT, ALERO, 'piedra', 'S',
-     [(0.4, 1.8, 'vidriera', {}), P(3.6, 1.1, hoja='azul', bisagra='fin', giro=100), V(7.8), V(11.6)])
+     [(0.4, 1.8, 'vidriera', dict(giros=[180, 90])), P(3.6, 1.1, hoja='azul', bisagra='fin', giro=180), V(7.8), V(11.6)])
 # Ala en L (encalada), bajo su cubierta de una agua
 muro((0, 9), (0, 15), EXT, alto_ala, 'blanco', 'O', [V(1.0), (4.2, 4.9, 'ventanuco', {})])
-muro((0, 15), (6, 15), EXT, ALA_BAJO, 'blanco', 'S', [P(3.6, 0.9, hoja='verde')])
+muro((0, 15), (6, 15), EXT, ALA_BAJO, 'blanco', 'S', [P(3.6, 0.9, hoja='verde', giro=180)])
 muro((6, 9), (6, 15), EXT, alto_ala, 'blanco', 'E', [V(0.8), (4.3, 5.0, 'ventanuco', {})])
 
 
@@ -114,16 +114,16 @@ def bajo_cubierta(u, v):
 
 
 muro((8, 0), (8, 4.5), TAB, bajo_cubierta, 'interior', 'E', [(1.2, 2.6, 'paso', {})])
-muro((8, 4.5), (8, 9), TAB, bajo_cubierta, 'interior', 'E', [(1.7, 3.1, 'vidriera', {})])
-muro((8, 4.3), (12.5, 4.3), TAB, 2.7, 'interior', 'S', [P(2.9, bisagra='fin')])
+muro((8, 4.5), (8, 9), TAB, bajo_cubierta, 'interior', 'E', [(1.7, 3.1, 'vidriera', dict(giros=[180, 180]))])
+muro((8, 4.3), (12.5, 4.3), TAB, 2.7, 'interior', 'S', [P(2.9, giro=180)])
 muro((12.5, 0), (12.5, 4.3), TAB, 2.7, 'interior', 'E')
 muro((12.5, 5.5), (12.5, 9), TAB, 2.7, 'interior', 'E')
-muro((12.5, 4.3), (20, 4.3), TAB, 2.7, 'interior', 'N', [P(0.5), P(4.9)])
+muro((12.5, 4.3), (20, 4.3), TAB, 2.7, 'interior', 'N', [P(0.5, giro=180), P(4.9, giro=180)])
 muro((16.8, 0), (16.8, 4.3), TAB, 2.7, 'interior', 'E')
-muro((12.5, 5.5), (20, 5.5), TAB, 2.7, 'interior', 'S', [P(2.7, bisagra='fin'), P(4.1)])
+muro((12.5, 5.5), (20, 5.5), TAB, 2.7, 'interior', 'S', [P(2.7, giro=180), P(4.1, bisagra='fin', giro=180)])
 muro((16.3, 5.5), (16.3, 9), TAB, 2.7, 'interior', 'E')
-muro((0, 9), (6, 9), TAB, ALERO - 0.05, 'interior', 'S', [P(4.6)])
-muro((0, 12.3), (6, 12.3), TAB, alto_ala, 'interior', 'S', [P(4.8)])
+muro((0, 9), (6, 9), TAB, ALERO - 0.05, 'interior', 'S', [P(4.6, giro=180)])
+muro((0, 12.3), (6, 12.3), TAB, alto_ala, 'interior', 'S', [P(4.8, giro=180)])
 
 # Porche: pilares de piedra y viga de madera en la boca
 PILARES = [[u, 11.45, 0.35, 2.3, 'piedra'] for u in (9.5, 13.0, 16.5, 19.8)]
@@ -185,7 +185,7 @@ MUEBLES = [
     *[M('silla_madera', u, v, g, color='#6e5a48') for u in (3.75, 4.85) for v, g in ((6.2, 0), (7.6, 180))],
     M('silla_madera', 3.35, 6.9, 90, color='#6e5a48'), M('silla_madera', 5.25, 6.9, -90, color='#6e5a48'),
     M('aparador', 0.45, 7.2, 90, largo=1.6),
-    M('maceta', 7.5, 8.5, radio=0.22, planta=0.9),
+    M('maceta', 0.55, 8.5, radio=0.22, planta=0.9),              # en el rincón: fuera del giro de las vidrieras
     # cocina: encimera corrida en la fachada N e isla con banquetas
     M('encimera', 10.3, 0.55, 0, largo=3.9, fregadero=0.2),
     M('nevera', 12.05, 2.6, -90),
