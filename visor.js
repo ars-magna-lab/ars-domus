@@ -1330,17 +1330,18 @@ var MUEBLE = {
     pz(g, 0.46, 0.66, 0.06, c, 0, 0.86, -0.24).rotation.x = -0.12;
     [-1,1].forEach(function(q){ pz(g, 0.05, 0.05, 0.3, MI.negro, q*0.27, 0.66, 0); pz(g, 0.03, 0.18, 0.03, MI.negro, q*0.27, 0.56, -0.05); });
   },
-  kallax: function(g, m){                                             // estantería de cubos
+  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas
     var pc = 0.3675, W = m.cols*pc + 0.035, H = m.filas*pc + 0.035, D = 0.39;
-    [0, H].forEach(function(y){ pz(g, W, 0.035, D, MI.negro, 0, y === 0 ? 0.0175 : H-0.0175, 0); });
-    [-1,1].forEach(function(q){ pz(g, 0.035, H, D, MI.negro, q*(W/2-0.0175), H/2, 0); });
-    for(var i=1;i<m.cols;i++) pz(g, 0.016, H-0.07, D, MI.negro, -W/2+0.0175+i*pc, H/2, 0);
-    for(var j=1;j<m.filas;j++) pz(g, W-0.07, 0.016, D, MI.negro, 0, 0.0175+j*pc, 0);
-    pz(g, W, H, 0.006, MI.negro, 0, H/2, -D/2+0.003);
+    var c = m.color ? lc(m.color) : MI.negro, cj = m.cajas ? lc(m.cajas) : MI.blanco;
+    [0, H].forEach(function(y){ pz(g, W, 0.035, D, c, 0, y === 0 ? 0.0175 : H-0.0175, 0); });
+    [-1,1].forEach(function(q){ pz(g, 0.035, H, D, c, q*(W/2-0.0175), H/2, 0); });
+    for(var i=1;i<m.cols;i++) pz(g, 0.016, H-0.07, D, c, -W/2+0.0175+i*pc, H/2, 0);
+    for(var j=1;j<m.filas;j++) pz(g, W-0.07, 0.016, D, c, 0, 0.0175+j*pc, 0);
+    pz(g, W, H, 0.006, c, 0, H/2, -D/2+0.003);
     // ordenada: cajas blancas en damero y el resto de cubos vacíos
     for(i=0;i<m.cols;i++) for(j=0;j<m.filas;j++){
       if((i+j)%2) continue;
-      pz(g, 0.32, 0.31, 0.34, MI.blanco, -W/2+0.0175+(i+0.5)*pc, 0.035+j*pc+0.16, 0.01);
+      pz(g, 0.32, 0.31, 0.34, cj, -W/2+0.0175+(i+0.5)*pc, 0.035+j*pc+0.16, 0.01);
     }
   },
   radiador: function(g){
@@ -1525,15 +1526,19 @@ var MUEBLE = {
     pz(g, 0.004, 1.7, 0.005, MI.gris, 0, 0.9, 0.25);
     [-0.05, 0.05].forEach(function(x){ pz(g, 0.015, 0.16, 0.02, MI.gris, x, 1.0, 0.26); });
   },
-  cama_infantil: function(g){                                                  // cama infantil de pino, baja y con barandilla
-    var W = 0.99, L = 2.09, H = 1.16;
-    pz(g, W, 0.3, L, MI.blanco, 0, 0.15, 0);
-    pz(g, W-0.1, 0.12, L-0.1, lam({color:'#3a4f86'}), 0, 0.36, 0);   // colchón con la funda azul
+  cama_infantil: function(g, m){                                      // cama infantil de pino con barandilla; m.alta: el somier
+    var W = 0.99, L = 2.09, H = 1.16, alta = !!m.alta;                //   arriba, para darle la vuelta, con hueco debajo
+    var yb = alta ? 0.78 : 0.15, rail = alta ? [0.12, 0.78, H-0.03] : [0.35, H-0.03];
+    if(alta) pz(g, W, 0.05, L, MI.pino, 0, yb, 0);                     // somier arriba
+    else pz(g, W, 0.3, L, MI.blanco, 0, 0.15, 0);
+    pz(g, W-0.1, 0.12, L-0.1, lam({color:m.funda || '#3a4f86'}), 0, alta ? yb+0.085 : 0.36, 0);   // colchón
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){ pz(g, 0.06, H, 0.06, MI.pino, q[0]*(W/2-0.03), H/2, q[1]*(L/2-0.03)); });
-    [[0.35, 0], [H-0.03, 0]].forEach(function(p){
-      [-1,1].forEach(function(q){ pz(g, 0.04, 0.06, L, MI.pino, q*(W/2-0.02), p[0], 0); pz(g, W, 0.06, 0.04, MI.pino, 0, p[0], q*(L/2-0.02)); });
+    rail.forEach(function(y){
+      [-1,1].forEach(function(q){ pz(g, 0.04, 0.06, L, MI.pino, q*(W/2-0.02), y, 0); pz(g, W, 0.06, 0.04, MI.pino, 0, y, q*(L/2-0.02)); });
     });
-    for(var i=1;i<4;i++) pz(g, 0.35, 0.03, 0.03, MI.pino, -W/2+0.25, 0.35+i*0.2, -L/2+0.02);   // escalera
+    if(alta) [-1,1].forEach(function(q){ pz(g, 0.012, 0.6, L-0.12, MI.blanco, q*(W/2-0.02), yb+0.38, 0); });   // laterales de arriba
+    var e0 = alta ? 0.12 : 0.35, n = alta ? 4 : 3, de = alta ? (yb+0.3-e0)/(n+1) : 0.2;
+    for(var i=1;i<=n;i++) pz(g, 0.35, 0.03, 0.03, MI.pino, -W/2+0.25, e0+i*de, -L/2+0.02);   // escalera
   },
   cuadros: function(g, m){                                            // láminas enmarcadas en fila
     for(var i=0;i<m.n;i++){
@@ -1551,9 +1556,10 @@ var MUEBLE = {
     pz(g, W, H, 0.04, MI.negro, 0, m.y, 0.02);
     pz(g, W-0.03, H-0.03, 0.004, lam({color:'#16191c'}), 0, m.y, 0.042);
   },
-  comoda: function(g){                                                // cómoda negra de cuatro cajones
-    pz(g, 0.8, 1.0, 0.48, MI.negro, 0, 0.5, 0);
-    for(var i=1;i<4;i++) pz(g, 0.78, 0.006, 0.005, MI.gris, 0, i*0.25, 0.241);
+  comoda: function(g, m){                                             // cómoda de cajones (negra y de cuatro, salvo m.color, m.cajones)
+    var n = m.cajones || 4, H = m.alto || 1.0, W = m.ancho || 0.8;
+    pz(g, W, H, 0.48, m.color ? lc(m.color) : MI.negro, 0, H/2, 0);
+    for(var i=1;i<n;i++) pz(g, W-0.02, 0.006, 0.005, MI.gris, 0, i*H/n, 0.241);
   },
   banera: function(g){                                                // bañera de obra alicatada
     pz(g, 1.6, 0.52, 0.72, MI.azulejo, 0, 0.26, 0);
