@@ -1348,7 +1348,8 @@ var MUEBLE = {
     pz(g, 0.46, 0.66, 0.06, c, 0, 0.86, -0.24).rotation.x = -0.12;
     [-1,1].forEach(function(q){ pz(g, 0.05, 0.05, 0.3, MI.negro, q*0.27, 0.66, 0); pz(g, 0.03, 0.18, 0.03, MI.negro, q*0.27, 0.56, -0.05); });
   },
-  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas, m.juguetes
+  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas, m.juguetes,
+                                                                      //   m.arriba: cajas de almacenaje grandes encima
     var pc = 0.3675, W = m.cols*pc + 0.035, H = m.filas*pc + 0.035, D = 0.39;
     var c = m.color ? lc(m.color) : MI.negro, cj = m.cajas ? lc(m.cajas) : MI.blanco;
     [0, H].forEach(function(y){ pz(g, W, 0.035, D, c, 0, y === 0 ? 0.0175 : H-0.0175, 0); });
@@ -1362,6 +1363,15 @@ var MUEBLE = {
       if(m.juguetes){ if((i*7+j*3)%9 !== 4) juguete(g, i*5+j*3+i*j, cx, cy, 0.02); continue; }
       if((i+j)%2) continue;
       pz(g, 0.32, 0.31, 0.34, cj, cx, cy+0.16, 0.01);
+    }
+    if(m.arriba){                                                      // cajas con tapa, en fila encima
+      var na = m.arriba, wa = (W-0.02)/na - 0.02, ha = m.altoArriba || 0.36, ca = lc(m.colorArriba || '#e9e4da');
+      for(i=0;i<na;i++){
+        var xa = -W/2+0.02+wa/2+i*(wa+0.02);
+        pz(g, wa, ha, D-0.02, ca, xa, H+ha/2, 0);
+        pz(g, wa+0.01, 0.02, D-0.01, ca, xa, H+ha+0.01, 0);                                         // tapa
+        pz(g, 0.12, 0.035, 0.004, MI.gris, xa, H+ha-0.07, (D-0.02)/2+0.002);                         // asa
+      }
     }
   },
   radiador: function(g){
@@ -1553,13 +1563,17 @@ var MUEBLE = {
     else pz(g, W, 0.3, L, MI.blanco, 0, 0.15, 0);
     pz(g, W-0.1, 0.12, L-0.1, lam({color:m.funda || '#3a4f86'}), 0, alta ? yb+0.085 : 0.36, 0);   // colchón
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){ pz(g, 0.06, H, 0.06, MI.pino, q[0]*(W/2-0.03), H/2, q[1]*(L/2-0.03)); });
+    var ae = 0.45;                                                     // alta: la escalera, en el lado -x hacia +z, con su paso
     rail.forEach(function(y){
-      [-1,1].forEach(function(q){ pz(g, 0.04, 0.06, L, MI.pino, q*(W/2-0.02), y, 0); pz(g, W, 0.06, 0.04, MI.pino, 0, y, q*(L/2-0.02)); });
+      [-1,1].forEach(function(q){
+        if(alta && q < 0 && y > yb) pz(g, 0.04, 0.06, L-ae, MI.pino, -W/2+0.02, y, -ae/2);   // barandilla abierta encima de la escalera
+        else pz(g, 0.04, 0.06, L, MI.pino, q*(W/2-0.02), y, 0);
+        pz(g, W, 0.06, 0.04, MI.pino, 0, y, q*(L/2-0.02));
+      });
     });
-    if(alta){                                                          // escalera de mano en el lado largo -x, hacia +z
-      var zl = L/2-0.33, xl = -W/2-0.05;
-      [-1,1].forEach(function(q){ pz(g, 0.04, H, 0.06, MI.pino, xl, H/2, zl+q*0.19); });
-      for(var i=1;i<=4;i++) pz(g, 0.035, 0.035, 0.38, MI.pino, xl, i*0.2, zl);
+    if(alta){                                                          // escalera en el plano del lado -x: del poste de la esquina
+      pz(g, 0.06, H, 0.06, MI.pino, -W/2+0.03, H/2, L/2-ae);           //   a un poste más, con los peldaños entre los dos
+      for(var i=1;i<=3;i++) pz(g, 0.035, 0.035, ae-0.03, MI.pino, -W/2+0.02, i*0.22, L/2-ae/2);
     }
     else for(var i=1;i<4;i++) pz(g, 0.35, 0.03, 0.03, MI.pino, -W/2+0.25, 0.35+i*0.2, -L/2+0.02);   // escalera
   },
