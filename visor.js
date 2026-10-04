@@ -1191,7 +1191,7 @@ function construyeEstancias(){ INT.estancias.forEach(function(e){
 /* Muebles. Cada uno en su grupo: origen en el centro de su planta, frente hacia +z. */
 var NOMBRE_MUEBLE = {
   mueble_bajo:'Mueble bajo', alfombra:'Alfombra', sofa_tela:'Sofá de tela', mesa_centro:'Mesa de centro',
-  butaca_tela:'Butaca', lampara_pie:'Lámpara de pie', lampara_rincon:'Lámpara de rincón', mesa_madera:'Mesa de madera', silla_madera:'Silla de madera',
+  butaca_tela:'Butaca', carrito:'Carrito auxiliar', lampara_pie:'Lámpara de pie', lampara_rincon:'Lámpara de rincón', mesa_madera:'Mesa de madera', silla_madera:'Silla de madera',
   lampara_techo:'Lámpara de techo', libreria:'Librería', tipi:'Tipi', columnas:'Columnas de horno y nevera', estantes:'Estantes',
   isla:'Isla de cocina', banqueta:'Banqueta', mesa_redonda_madera:'Mesa redonda de madera', planta:'Planta',
   escritorio:'Escritorio', panel_listones:'Panel de listones', banco_tapizado:'Banco tapizado',
@@ -1340,13 +1340,34 @@ var MUEBLE = {
     pz(g, W, H, 0.03, MI.negro, 0, y+0.18+H/2, 0);
     pz(g, W-0.03, H-0.03, 0.004, MI.pantalla, 0, y+0.18+H/2, 0.016);
   },
-  silla_oficina: function(g, m){
+  silla_oficina: function(g, m){                                      // m.escala: más pequeña (la infantil, ~0.8)
+    if(m.escala){ var s = new THREE.Group(); s.scale.setScalar(m.escala); g.add(s); return MUEBLE.silla_oficina(s, Object.assign({}, m, {escala:0})); }
     var c = lam({color:m.color});
     for(var i=0;i<5;i++){ var a = pz(g, 0.3, 0.03, 0.04, MI.negro, 0, 0.06, 0); a.geometry.translate(0.15, 0, 0); a.rotation.y = i*Math.PI*2/5; }
     cil(g, 0.025, 0.025, 0.36, MI.negro, 0, 0.25, 0, 8);
     pz(g, 0.5, 0.08, 0.48, c, 0, 0.47, 0);
     pz(g, 0.46, 0.66, 0.06, c, 0, 0.86, -0.24).rotation.x = -0.12;
     [-1,1].forEach(function(q){ pz(g, 0.05, 0.05, 0.3, MI.negro, q*0.27, 0.66, 0); pz(g, 0.03, 0.18, 0.03, MI.negro, q*0.27, 0.56, -0.05); });
+  },
+  carrito: function(g, m){                                            // carrito auxiliar de baldas con ruedas; m.baldas, m.color, m.cosas
+    var n = m.baldas || 3, W = m.ancho || 0.42, D = m.fondo || 0.3, H = m.alto || 0.8, c = lc(m.color || '#e8c35a');
+    [-1,1].forEach(function(a){ [-1,1].forEach(function(b){
+      pz(g, 0.02, H-0.06, 0.02, c, a*(W/2-0.01), 0.06+(H-0.06)/2, b*(D/2-0.01));
+      bola(g, 0.025, MI.negro, a*(W/2-0.03), 0.025, b*(D/2-0.03));
+    }); });
+    for(var i=0;i<n;i++){
+      var y = 0.1 + i*(H-0.12)/(n-1);
+      pz(g, W, 0.012, D, c, 0, y, 0);                                   // bandeja
+      [-1,1].forEach(function(q){ pz(g, W, 0.06, 0.008, c, 0, y+0.03, q*(D/2-0.004)); pz(g, 0.008, 0.06, D, c, q*(W/2-0.004), y+0.03, 0); });
+      if(!m.cosas) continue;
+      for(var k=0;k<3;k++){                                              // botes, ceras y cuadernos
+        var x = -W/2+0.08+k*(W-0.16)/2, col = lc(COLOR_JUGUETE[(i*3+k) % COLOR_JUGUETE.length]);
+        if((i+k)%3 === 0) cil(g, 0.035, 0.035, 0.09, col, x, y+0.05, 0, 12);
+        else if((i+k)%3 === 1) pz(g, 0.1, 0.05, 0.14, col, x, y+0.03, 0);
+        else { cil(g, 0.03, 0.03, 0.08, lc('#d9d4c8'), x, y+0.045, 0, 10);
+               [-1,0,1].forEach(function(d){ pz(g, 0.008, 0.12, 0.008, col, x+d*0.012, y+0.1, d*0.008); }); }   // vaso de pinceles
+      }
+    }
   },
   kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas, m.juguetes,
                                                                       //   m.arriba: cajas de almacenaje grandes encima
