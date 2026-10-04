@@ -1063,7 +1063,7 @@ function bombilla(mallas, o){
 }
 /* Luminarias: tipo de mueble → cómo se llama su luz en la ficha */
 var LUMINARIA = {proyector:'proyector', flexo:'flexo', farola:'farola', foco:'foco empotrado', colgante:'colgante', plafon:'plafón', aplique:'aplique', tira:'tira LED',
-  farol:'farol', lampara_techo:'colgante', lampara_pie:'lámpara de pie', farolillo:'baliza', guirnalda:'guirnalda'};
+  farol:'farol', lampara_techo:'colgante', lampara_pie:'lámpara de pie', lampara_rincon:'barra LED de rincón', farolillo:'baliza', guirnalda:'guirnalda'};
 
 /* Referencia de foto de un mueble o una estancia: «t5: 12» es la foto 12 de la tanda t5, con el
    nombre de la tanda en meta.tandas; sin prefijo, la de meta.tandas.defecto */
@@ -1191,7 +1191,7 @@ function construyeEstancias(){ INT.estancias.forEach(function(e){
 /* Muebles. Cada uno en su grupo: origen en el centro de su planta, frente hacia +z. */
 var NOMBRE_MUEBLE = {
   mueble_bajo:'Mueble bajo', alfombra:'Alfombra', sofa_tela:'Sofá de tela', mesa_centro:'Mesa de centro',
-  butaca_tela:'Butaca', lampara_pie:'Lámpara de pie', mesa_madera:'Mesa de madera', silla_madera:'Silla de madera',
+  butaca_tela:'Butaca', lampara_pie:'Lámpara de pie', lampara_rincon:'Lámpara de rincón', mesa_madera:'Mesa de madera', silla_madera:'Silla de madera',
   lampara_techo:'Lámpara de techo', libreria:'Librería', tipi:'Tipi', columnas:'Columnas de horno y nevera', estantes:'Estantes',
   isla:'Isla de cocina', banqueta:'Banqueta', mesa_redonda_madera:'Mesa redonda de madera', planta:'Planta',
   escritorio:'Escritorio', panel_listones:'Panel de listones', banco_tapizado:'Banco tapizado',
@@ -1807,6 +1807,13 @@ var MUEBLE = {
   lampara_pie: function(g){
     cil(g, 0.14, 0.16, 0.03, MI.negro, 0, 0.015, 0, 16); cil(g, 0.012, 0.012, 1.45, MI.negro, 0, 0.74, 0, 6);
     bombilla(cil(g, 0.13, 0.2, 0.26, lam({color:'#efe6d4'}), 0, 1.5, 0, 16), {fuerza:0.45, alcance:4, halo:0.5});
+  },
+  lampara_rincon: function(g, m){                                     // barra LED de pie para un rincón, de color; m.alto, m.tono
+    var H = m.alto || 1.4;
+    cil(g, 0.11, 0.12, 0.02, MI.negro, 0, 0.01, 0, 20);
+    pz(g, 0.035, H, 0.035, MI.negro, 0, H/2+0.02, 0);
+    bombilla(pz(g, 0.022, H-0.1, 0.012, lam({color:'#f4f4f4'}), 0, H/2+0.04, 0.02),
+             {tono:m.tono || '#9b5cff', fuerza:0.5, alcance:3.5, halo:0.8, frente:0.3});
   },
   lampara_techo: function(g, m, e){                                   // colgante de fibra o de cerámica
     var yt = (m.techo || techoEn(e, m.uv[1]) - e.cota), y = m.y || Math.max(1.85, yt - 0.85), r = m.radio || 0.22;
