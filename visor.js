@@ -1362,7 +1362,7 @@ var MUEBLE = {
   },
   cuadro: function(g, m){ pz(g, m.ancho, m.alto, 0.03, MI.blanco, 0, m.y, 0); pz(g, m.ancho-0.06, m.alto-0.06, 0.004, m.color ? lam({color:m.color}) : MI.cuadro, 0, m.y, 0.016); },
   silla: function(g){ silla(g, 1, MI.oscura, MI.tela); },
-  silla_nino: function(g){ silla(g, 0.62, MI.rojo, MI.rojo); },
+  silla_nino: function(g, m){ var c = m.color ? lc(m.color) : MI.rojo; silla(g, 0.62, c, c); },
   sofa: function(g, m){                                               // sofá de piel marrón, tres plazas
     var L = m.largo, D = 0.95;
     pz(g, L, 0.36, D, MI.cuero, 0, 0.18, 0);
@@ -1536,7 +1536,6 @@ var MUEBLE = {
     rail.forEach(function(y){
       [-1,1].forEach(function(q){ pz(g, 0.04, 0.06, L, MI.pino, q*(W/2-0.02), y, 0); pz(g, W, 0.06, 0.04, MI.pino, 0, y, q*(L/2-0.02)); });
     });
-    if(alta) [-1,1].forEach(function(q){ pz(g, 0.012, 0.6, L-0.12, MI.blanco, q*(W/2-0.02), yb+0.38, 0); });   // laterales de arriba
     var e0 = alta ? 0.12 : 0.35, n = alta ? 4 : 3, de = alta ? (yb+0.3-e0)/(n+1) : 0.2;
     for(var i=1;i<=n;i++) pz(g, 0.35, 0.03, 0.03, MI.pino, -W/2+0.25, e0+i*de, -L/2+0.02);   // escalera
   },
@@ -1942,10 +1941,11 @@ var MUEBLE = {
     });
   },
   escritorio: function(g, m){
-    var L = m.largo || 1.6, D = m.fondo || 0.7, c = lc(m.color || '#b98b5e');
-    pz(g, L, 0.04, D, c, 0, 0.74, 0);
-    [-1,1].forEach(function(q){ pz(g, 0.04, 0.72, D-0.1, lc('#2b2b2a'), q*(L/2-0.1), 0.36, 0); });
-    if(L > 2) pz(g, 0.04, 0.72, D-0.1, lc('#2b2b2a'), 0, 0.36, 0);
+    var L = m.largo || 1.6, D = m.fondo || 0.7, H = m.alto || 0.76, c = lc(m.color || '#b98b5e');   // m.alto: hasta arriba del tablero
+    var pa = m.patas ? lc(m.patas) : lc('#2b2b2a');
+    pz(g, L, 0.04, D, c, 0, H-0.02, 0);
+    [-1,1].forEach(function(q){ pz(g, 0.04, H-0.04, D-0.1, pa, q*(L/2-0.1), (H-0.04)/2, 0); });
+    if(L > 2) pz(g, 0.04, H-0.04, D-0.1, pa, 0, (H-0.04)/2, 0);
   },
   panel_listones: function(g, m){                                     // cabecero de listones de madera de pared a pared
     var W = m.ancho, H = m.alto || 2.4, c = lc(m.color || '#b98b5e'), n = Math.round(W/0.09);
