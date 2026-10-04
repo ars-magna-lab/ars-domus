@@ -1369,7 +1369,7 @@ var MUEBLE = {
       }
     }
   },
-  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas, m.juguetes,
+  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas, m.juguetes, m.libros (fila de libros),
                                                                       //   m.arriba: cajas de almacenaje grandes encima
     var pc = 0.3675, W = m.cols*pc + 0.035, H = m.filas*pc + 0.035, D = 0.39;
     var c = m.color ? lc(m.color) : MI.negro, cj = m.cajas ? lc(m.cajas) : MI.blanco;
@@ -1381,6 +1381,13 @@ var MUEBLE = {
     // ordenada: cajas blancas en damero y el resto de cubos vacíos; o juguetes sueltos, cada cubo con uno
     for(i=0;i<m.cols;i++) for(j=0;j<m.filas;j++){
       var cx = -W/2+0.0175+(i+0.5)*pc, cy = 0.035+j*pc;
+      if(m.libros === j){                                                // la fila de libros: el cubo lleno, de pie
+        for(var b=0, xb=cx-0.16; xb < cx+0.13; b++){
+          var gb = 0.025+0.012*((i*3+b)%3), hb = 0.2+0.04*((i+b*5)%3);
+          pz(g, gb, hb, 0.22+0.03*(b%2), LIBRO[(i*5+b)%LIBRO.length], xb+gb/2, cy+hb/2, 0.03); xb += gb+0.003;
+        }
+        continue;
+      }
       if(m.juguetes){ if((i*7+j*3)%9 !== 4) juguete(g, i*5+j*3+i*j, cx, cy, 0.02); continue; }
       if((i+j)%2) continue;
       pz(g, 0.32, 0.31, 0.34, cj, cx, cy+0.16, 0.01);
