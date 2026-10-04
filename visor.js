@@ -1225,6 +1225,24 @@ function silla(g, s, mp, ma){
   [-1,1].forEach(function(q){ pz(g, 0.035, 0.5*s, 0.035, mp, q*0.19*s, 0.72*s, -0.19*s); });
   pz(g, 0.42*s, 0.2*s, 0.025, mp, 0, 0.84*s, -0.19*s);
 }
+/* Un juguete de colores para una balda o un cubo (k elige cuál y sus colores), apoyado en (x, y, z) */
+var COLOR_JUGUETE = ['#e2483d', '#f2b631', '#3f86d6', '#4fae5b', '#ef7fb0', '#8a5cc7', '#f08a2c'];
+function juguete(g, k, x, y, z){
+  var c = function(n){ return lc(COLOR_JUGUETE[(k+n) % COLOR_JUGUETE.length]); };
+  switch(k % 6){
+    case 0: bola(g, 0.1, c(0), x, y+0.1, z); break;                                     // pelota
+    case 1: [0, 1, 2].forEach(function(n){ pz(g, 0.08, 0.08, 0.08, c(n), x-0.06+n*0.06, y+0.04, z+(n%2)*0.05); });
+            pz(g, 0.08, 0.08, 0.08, c(3), x-0.03, y+0.12, z+0.02); break;                // bloques
+    case 2: bola(g, 0.09, lc('#a8784a'), x, y+0.09, z, 0.95); bola(g, 0.065, lc('#a8784a'), x, y+0.23, z+0.01);
+            [-1, 1].forEach(function(q){ bola(g, 0.025, lc('#8a5e38'), x+q*0.05, y+0.29, z); }); break;   // osito
+    case 3: pz(g, 0.2, 0.06, 0.1, c(0), x, y+0.06, z); pz(g, 0.1, 0.05, 0.09, c(4), x-0.02, y+0.11, z);
+            [-1, 1].forEach(function(a){ [-1, 1].forEach(function(b){
+              cil(g, 0.025, 0.025, 0.02, MI.negro, x+a*0.065, y+0.025, z+b*0.05, 10).rotation.x = Math.PI/2; }); }); break;   // coche
+    case 4: for(var n=0;n<5;n++) pz(g, 0.025, 0.2+0.03*(n%2), 0.16, c(n), x-0.08+n*0.035, y+0.1+0.015*(n%2), z); break;      // cuentos
+    default: cil(g, 0.09, 0.075, 0.14, c(2), x, y+0.07, z, 16);                              // cubo de piezas
+            [0, 1, 2].forEach(function(n){ pz(g, 0.04, 0.03, 0.04, c(n+3), x-0.03+n*0.03, y+0.155, z+(n-1)*0.02); });
+  }
+}
 /* Materiales por color, compartidos (los muebles nuevos llevan su color en el modelo). */
 var LAMC = {};
 function lc(c){ return LAMC[c] || (LAMC[c] = lam({color:c})); }
@@ -1330,7 +1348,7 @@ var MUEBLE = {
     pz(g, 0.46, 0.66, 0.06, c, 0, 0.86, -0.24).rotation.x = -0.12;
     [-1,1].forEach(function(q){ pz(g, 0.05, 0.05, 0.3, MI.negro, q*0.27, 0.66, 0); pz(g, 0.03, 0.18, 0.03, MI.negro, q*0.27, 0.56, -0.05); });
   },
-  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas
+  kallax: function(g, m){                                             // estantería de cubos; m.color, m.cajas, m.juguetes
     var pc = 0.3675, W = m.cols*pc + 0.035, H = m.filas*pc + 0.035, D = 0.39;
     var c = m.color ? lc(m.color) : MI.negro, cj = m.cajas ? lc(m.cajas) : MI.blanco;
     [0, H].forEach(function(y){ pz(g, W, 0.035, D, c, 0, y === 0 ? 0.0175 : H-0.0175, 0); });
@@ -1338,10 +1356,12 @@ var MUEBLE = {
     for(var i=1;i<m.cols;i++) pz(g, 0.016, H-0.07, D, c, -W/2+0.0175+i*pc, H/2, 0);
     for(var j=1;j<m.filas;j++) pz(g, W-0.07, 0.016, D, c, 0, 0.0175+j*pc, 0);
     pz(g, W, H, 0.006, c, 0, H/2, -D/2+0.003);
-    // ordenada: cajas blancas en damero y el resto de cubos vacíos
+    // ordenada: cajas blancas en damero y el resto de cubos vacíos; o juguetes sueltos, cada cubo con uno
     for(i=0;i<m.cols;i++) for(j=0;j<m.filas;j++){
+      var cx = -W/2+0.0175+(i+0.5)*pc, cy = 0.035+j*pc;
+      if(m.juguetes){ if((i*7+j*3)%9 !== 4) juguete(g, i*5+j*3+i*j, cx, cy, 0.02); continue; }
       if((i+j)%2) continue;
-      pz(g, 0.32, 0.31, 0.34, cj, -W/2+0.0175+(i+0.5)*pc, 0.035+j*pc+0.16, 0.01);
+      pz(g, 0.32, 0.31, 0.34, cj, cx, cy+0.16, 0.01);
     }
   },
   radiador: function(g){
@@ -1526,9 +1546,9 @@ var MUEBLE = {
     pz(g, 0.004, 1.7, 0.005, MI.gris, 0, 0.9, 0.25);
     [-0.05, 0.05].forEach(function(x){ pz(g, 0.015, 0.16, 0.02, MI.gris, x, 1.0, 0.26); });
   },
-  cama_infantil: function(g, m){                                      // cama infantil de pino con barandilla; m.alta: el somier
-    var W = 0.99, L = 2.09, H = 1.16, alta = !!m.alta;                //   arriba, para darle la vuelta, con hueco debajo
-    var yb = alta ? 0.78 : 0.15, rail = alta ? [0.12, 0.78, H-0.03] : [0.35, H-0.03];
+  cama_infantil: function(g, m){                                      // cama infantil de pino con barandilla; m.alta: dada la
+    var W = 0.99, L = 2.09, H = 1.16, alta = !!m.alta;                //   vuelta, el somier arriba y abajo libre, sin barras
+    var yb = alta ? 0.78 : 0.15, rail = alta ? [0.78, H-0.03] : [0.35, H-0.03];
     if(alta) pz(g, W, 0.05, L, MI.pino, 0, yb, 0);                     // somier arriba
     else pz(g, W, 0.3, L, MI.blanco, 0, 0.15, 0);
     pz(g, W-0.1, 0.12, L-0.1, lam({color:m.funda || '#3a4f86'}), 0, alta ? yb+0.085 : 0.36, 0);   // colchón
@@ -1536,8 +1556,12 @@ var MUEBLE = {
     rail.forEach(function(y){
       [-1,1].forEach(function(q){ pz(g, 0.04, 0.06, L, MI.pino, q*(W/2-0.02), y, 0); pz(g, W, 0.06, 0.04, MI.pino, 0, y, q*(L/2-0.02)); });
     });
-    var e0 = alta ? 0.12 : 0.35, n = alta ? 4 : 3, de = alta ? (yb+0.3-e0)/(n+1) : 0.2;
-    for(var i=1;i<=n;i++) pz(g, 0.35, 0.03, 0.03, MI.pino, -W/2+0.25, e0+i*de, -L/2+0.02);   // escalera
+    if(alta){                                                          // escalera de mano en el lado largo -x, hacia +z
+      var zl = L/2-0.33, xl = -W/2-0.05;
+      [-1,1].forEach(function(q){ pz(g, 0.04, H, 0.06, MI.pino, xl, H/2, zl+q*0.19); });
+      for(var i=1;i<=4;i++) pz(g, 0.035, 0.035, 0.38, MI.pino, xl, i*0.2, zl);
+    }
+    else for(var i=1;i<4;i++) pz(g, 0.35, 0.03, 0.03, MI.pino, -W/2+0.25, 0.35+i*0.2, -L/2+0.02);   // escalera
   },
   cuadros: function(g, m){                                            // láminas enmarcadas en fila
     for(var i=0;i<m.n;i++){
