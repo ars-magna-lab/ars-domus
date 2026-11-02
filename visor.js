@@ -199,9 +199,11 @@ var relleno = new THREE.DirectionalLight('#dce6ef',0.12);
 relleno.position.set(-40,32,44); escena.add(relleno);
 
 /* ===================== texturas y materiales ===================== */
-var cargador = new THREE.TextureLoader();
+var cargador = new THREE.TextureLoader(), TEX_PENDIENTES = 0;
 function tex(nombre, anchoM, altoM){
-  var t = cargador.load('texturas/'+nombre+'.jpg');
+  TEX_PENDIENTES++;
+  var fin = function(){ TEX_PENDIENTES--; };
+  var t = cargador.load('texturas/'+nombre+'.jpg', fin, undefined, fin);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(1/anchoM, 1/altoM);
   t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -4933,11 +4935,84 @@ function recuperaVista(){
     pie.pitch = s.pie.pitch || 0; if(s.pie.y != null) pie.y = s.pie.y;
   }
 }
-if(!['vista', 'desde', 'pie', 'id', 'limpio'].some(function(k){ return QS.has(k); })) recuperaVista();
-setInterval(guardaVista, 1000);
-addEventListener('pagehide', guardaVista);
-bucle();
+var CINE = QS.has('cine');
+if(!CINE && !['vista', 'desde', 'pie', 'id', 'limpio'].some(function(k){ return QS.has(k); })) recuperaVista();
+if(!CINE){ setInterval(guardaVista, 1000); addEventListener('pagehide', guardaVista); bucle(); }
 document.getElementById('cargando').hidden = true;
+
+/* ===================== modo cine (?cine=1) ===================== */
+/* Tomas de vídeo fotograma a fotograma: sin interfaz y sin bucle propio; quien graba llama a
+   __cine.prepara(plano) una vez y a __cine.fotograma(t) por cada fotograma. Todo depende solo de t.
+   plano: ruta [[x,y,z, mx,my,mz], …] (curva suave repartida en _dura, con arranque y frenada), tiempos
+   (fracción de _dura de cada punto), curva ('suave' | 'lineal'), vista (id de VISTAS), version, capas
+   {nombre: bool}, hora (horas, o [desde, hasta] para que el sol se mueva), fecha ('21dic'), luces
+   ('todo': todas encendidas), fov y suave ('ambas', 'entrada', 'salida' o 'no': dónde acelera y frena). */
+(function(){
+  var toma = {}, cPos = null, cMira = null;
+  function esperaTexturas(){
+    return new Promise(function(ok){
+      (function mira(){ if(TEX_PENDIENTES <= 0) ok(); else setTimeout(mira, 100); })();
+    });
+  }
+  // de la fracción de la toma al parámetro de la curva, con los puntos en sus `tiempos`
+  function param(u){
+    var ts = toma.tiempos, n = (toma.ruta || []).length;
+    if(!ts || ts.length !== n || n < 2) return u;
+    for(var i = 1; i < n; i++) if(u <= ts[i] || i === n - 1){
+      var f = ts[i] > ts[i-1] ? (u - ts[i-1])/(ts[i] - ts[i-1]) : 1;
+      return (i - 1 + Math.max(0, Math.min(1, f)))/(n - 1);
+    }
+    return u;
+  }
+  function horaDe(u){
+    var h = toma.hora;
+    return Array.isArray(h) ? h[0] + (h[1] - h[0])*u : h;
+  }
+  window.__cine = {
+    listo: Promise.all([esperaTexturas(), document.fonts ? document.fonts.ready : null]).then(function(){ return true; }),
+    prepara: function(p){
+      toma = p || {};
+      if(toma.vista) eligeVista(toma.vista);
+      ponVersion(toma.version === 'mejorada' ? 'mejorada' : 'actual');
+      Object.keys(toma.capas || {}).forEach(function(k){ if(capas[k]) ponCapa(k, !!toma.capas[k]); });
+      if(toma.fecha){ var f = FECHAS.filter(function(x){ return x.txt.replace(' ', '') === toma.fecha; })[0]; if(f) fechaSel = f; }
+      if(toma.luces === 'todo' && !LZ.todo) btnTodo.click();
+      var ruta = toma.ruta || [];
+      if(ruta.length){
+        var V = function(a, i){ return new THREE.Vector3(a[i], a[i+1], a[i+2]); };
+        var pos = ruta.map(function(a){ return V(a, 0); }), mira = ruta.map(function(a){ return V(a, 3); });
+        if(pos.length === 1){ pos.push(pos[0].clone()); mira.push(mira[0].clone()); }
+        var tipo = toma.curva === 'lineal' ? 'chordal' : 'centripetal';
+        cPos = new THREE.CatmullRomCurve3(pos, false, tipo); cMira = new THREE.CatmullRomCurve3(mira, false, tipo);
+      } else { cPos = cMira = null; colocar(); }
+      camara.fov = toma.fov || (toma.vista ? camara.fov : 42); camara.updateProjectionMatrix();
+      redim();
+      return esperaTexturas();
+    },
+    fotograma: function(t){
+      // acelera y frena; `suave: 'entrada' | 'salida' | 'no'` para encadenar tramos de una misma ruta sin parar
+      var u = Math.min(1, t/(toma._dura || 1)), sv = toma.suave || 'ambas';
+      var s = sv === 'no' ? u : sv === 'entrada' ? u*u*(2 - u) : sv === 'salida' ? u*(1 + u - u*u) : u*u*(3 - 2*u);
+      if(cPos){
+        // con `tiempos`, cada punto cae en su instante; sin ellos, a velocidad constante por la curva
+        var k = param(s), en = toma.tiempos ? 'getPoint' : 'getPointAt';
+        camara.position.copy(cPos[en](k)); camara.lookAt(cMira[en](k));
+      }
+      if(toma.hora != null){ slider.value = String(Math.round(horaDe(u)*60)); actualizarSol(); }
+      repartirLuces();
+      renderer.render(escena, camara);
+    }
+  };
+  if(CINE){
+    var st = document.createElement('style');
+    st.textContent = 'body > *:not(#escena){display:none !important} #escena{position:fixed;inset:0} body{cursor:none}';
+    document.head.appendChild(st);
+    renderer.setPixelRatio(1);
+    // los relojes de pared, parados a una hora fija
+    RELOJES.forEach(function(r){ r.h.rotation.z = -(10 + 10/60)/12*2*Math.PI; r.m.rotation.z = -10/60*2*Math.PI; if(r.s) r.s.rotation.z = 0; });
+    redim(); actualizarSol(); window.__cine.fotograma(0);
+  }
+})();
 window.__visor = {escena:escena, camara:camara, aplicaVista:aplicaVista, VISTAS:VISTAS, pie:pie,
                   entrarPie:entrarPie, salirPie:salirPie, IDS:IDS, irAId:irAId, ED:ED, PUNTOS:PUNTOS, LZ:LZ, REPARTO:REPARTO, estanciaActiva:estanciaActiva};
 })();
