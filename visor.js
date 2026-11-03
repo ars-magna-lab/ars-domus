@@ -4943,13 +4943,17 @@ document.getElementById('cargando').hidden = true;
 /* ===================== modo cine (?cine=1) ===================== */
 /* Tomas de vídeo fotograma a fotograma: sin interfaz y sin bucle propio; quien graba llama a
    __cine.prepara(plano) una vez y a __cine.fotograma(t) por cada fotograma. Todo depende solo de t.
-   plano: ruta [[x,y,z, mx,my,mz], …] (curva suave repartida en _dura, con arranque y frenada), tiempos
-   (fracción de _dura de cada punto), curva ('suave' | 'lineal'), vista (id de VISTAS), version, capas
-   {nombre: bool}, hora (horas, o [desde, hasta] para que el sol se mueva), fecha ('21dic'), luces
-   ('todo': todas encendidas), fov, suave ('ambas', 'entrada', 'salida' o 'no': dónde acelera y frena) y
-   sombras (sí por defecto; false las quita). */
+   Cada toma empieza de cero (versión actual, capas de serie, luces apagadas, 21 de septiembre a las 13:00)
+   y le aplica lo que traiga. plano: ruta [[x,y,z, mx,my,mz], …] (curva suave repartida en _dura, con
+   arranque y frenada), tiempos (fracción de _dura de cada punto), curva ('suave' | 'lineal'), suave ('ambas',
+   'entrada', 'salida' o 'no': dónde acelera y frena), vista (id de VISTAS), version, capas {nombre: bool},
+   hora (horas, o [desde, hasta] para que el sol se mueva), fecha ('21jun'), luces ('todo': todas
+   encendidas), fov, sombras (sí por defecto; false las quita), ids (true: las etiquetas con el ID de cada
+   cosa, como en el visor) y puertas [{cerca:[x, z], abre:[t0, t1]} o {cerca, cierra:[t0, t1]}]: la puerta
+   más cercana a ese punto se abre (o se cierra) entre esos dos segundos de la toma. */
 (function(){
-  var toma = {}, cPos = null, cMira = null;
+  var toma = {}, cPos = null, cMira = null, movidas = [];
+  var CAPAS0 = {}; Object.keys(capas).forEach(function(k){ CAPAS0[k] = capas[k].visible; });
   function esperaTexturas(){
     return new Promise(function(ok){
       (function mira(){ if(TEX_PENDIENTES <= 0) ok(); else setTimeout(mira, 100); })();
@@ -4966,21 +4970,38 @@ document.getElementById('cargando').hidden = true;
     return u;
   }
   function horaDe(u){
-    var h = toma.hora;
+    var h = toma.hora == null ? 13 : toma.hora;
     return Array.isArray(h) ? h[0] + (h[1] - h[0])*u : h;
+  }
+  function puertaCerca(xz){
+    var mejor = null, dm = Infinity;
+    PUERTAS.forEach(function(p){
+      if(!p.w) p.w = p.g.localToWorld(vP.set(p.local[0], p.local[1], p.local[2])).clone();
+      var d = Math.hypot(p.w.x - xz[0], p.w.z - xz[1]);
+      if(d < dm){ dm = d; mejor = p; }
+    });
+    return mejor;
   }
   window.__cine = {
     listo: Promise.all([esperaTexturas(), document.fonts ? document.fonts.ready : null]).then(function(){ return true; }),
     prepara: function(p){
       toma = p || {};
+      // de cero: lo que dejó la toma anterior no pasa a esta
+      Object.keys(CAPAS0).forEach(function(k){ ponCapa(k, CAPAS0[k]); });
+      fechaSel = FECHAS.filter(function(x){ return x.txt.replace(' ', '') === (toma.fecha || '21sep'); })[0] || FECHAS[2];
+      if(LZ.todo !== (toma.luces === 'todo')) btnTodo.click();
+      movidas.forEach(function(m){ m.p.t = m.p.obj = 1; m.p.aplica(1); }); movidas = [];
       if(toma.vista) eligeVista(toma.vista);
       ponVersion(toma.version === 'mejorada' ? 'mejorada' : 'actual');
       Object.keys(toma.capas || {}).forEach(function(k){ if(capas[k]) ponCapa(k, !!toma.capas[k]); });
-      if(toma.fecha){ var f = FECHAS.filter(function(x){ return x.txt.replace(' ', '') === toma.fecha; })[0]; if(f) fechaSel = f; }
-      if(toma.luces === 'todo' && !LZ.todo) btnTodo.click();
       // las tomas llevan sombras salvo `sombras: false` (dentro, sin ellas, entra más luz)
       var cs = document.getElementById('opt-sombras'), sm = toma.sombras !== false;
       if(cs.checked !== sm){ cs.checked = sm; cs.dispatchEvent(new Event('change')); }
+      verIds = !!toma.ids; capaIds.innerHTML = ''; capaIds.style.display = verIds ? 'block' : 'none';
+      (toma.puertas || []).forEach(function(q){
+        var pu = puertaCerca(q.cerca || [0, 0]); if(!pu) return;
+        movidas.push({p:pu, de:q.abre ? 0 : 1, a:q.abre ? 1 : 0, t:q.abre || q.cierra || [0, 0.7]});
+      });
       var ruta = toma.ruta || [];
       if(ruta.length){
         var V = function(a, i){ return new THREE.Vector3(a[i], a[i+1], a[i+2]); };
@@ -5002,14 +5023,19 @@ document.getElementById('cargando').hidden = true;
         var k = param(s), en = toma.tiempos ? 'getPoint' : 'getPointAt';
         camara.position.copy(cPos[en](k)); camara.lookAt(cMira[en](k));
       }
-      if(toma.hora != null){ slider.value = String(Math.round(horaDe(u)*60)); actualizarSol(); }
+      slider.value = String(Math.round(horaDe(u)*60)); actualizarSol();
+      movidas.forEach(function(m){
+        var f = Math.max(0, Math.min(1, (t - m.t[0])/Math.max(0.01, m.t[1] - m.t[0]))), e = f*f*(3 - 2*f);
+        m.p.t = m.p.obj = m.de + (m.a - m.de)*e; m.p.aplica(m.p.t);
+      });
       repartirLuces();
       renderer.render(escena, camara);
+      if(verIds){ dist = 30; pintarIds(); }
     }
   };
   if(CINE){
     var st = document.createElement('style');
-    st.textContent = 'body > *:not(#escena){display:none !important} #escena{position:fixed;inset:0} body{cursor:none}';
+    st.textContent = 'body > *:not(#escena):not(#ids){display:none !important} body::before{display:none !important} #escena{position:fixed;inset:0} body{cursor:none}';
     document.head.appendChild(st);
     renderer.setPixelRatio(1);
     // los relojes de pared, parados a una hora fija
