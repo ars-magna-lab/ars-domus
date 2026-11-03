@@ -4575,6 +4575,12 @@ function andar(dt){
 }
 var botonPie = document.getElementById('a-pie'), pieHud = document.getElementById('pie-hud');
 var pieEstado = document.getElementById('pie-estado');
+/* En una pantalla táctil, el aviso del paseo explica los dedos en vez del teclado: desde el principio si
+   el puntero es grueso, o en cuanto se toca la pantalla */
+var TACTIL = false;
+function ponTactil(){ if(TACTIL) return; TACTIL = true; document.body.classList.add('tactil'); if(!pie.bloqueo && !LL) pieEstado.textContent = ayudaMirar(); }
+function ayudaMirar(){ return TACTIL ? 'Izquierda: andar · derecha: mirar · un toque abre la ficha' : 'Haz clic o arrastra para mirar'; }
+addEventListener('pointerdown', function(e){ if(e.pointerType === 'touch') ponTactil(); }, true);
 var orbitaGuardada = null, etqAntes = true, capasAntes = null;
 /* En el paseo siempre hay techos y árboles, aunque se entre desde una vista de «Dentro», que los quita;
    al salir se dejan como estaban */
@@ -4592,7 +4598,7 @@ function entrarPie(x, z, yaw){
   etqAntes = verEtq; verEtq = false; capaEtq.innerHTML = '';
   ocultar(); document.body.classList.add('a-pie'); pieHud.hidden = false;
   botonPie.setAttribute('aria-pressed','true');
-  pieEstado.textContent = 'Haz clic o arrastra para mirar';
+  pieEstado.textContent = ayudaMirar();
 }
 function salirPie(){
   if(!pie.activo) return;
@@ -4735,7 +4741,7 @@ lienzoGL.addEventListener('click', function(e){
 });
 document.addEventListener('pointerlockchange', function(){
   pie.bloqueo = document.pointerLockElement === lienzoGL;
-  pieEstado.textContent = pie.bloqueo ? 'Paseando' : 'Haz clic o arrastra para mirar';
+  pieEstado.textContent = pie.bloqueo ? 'Paseando' : ayudaMirar();
 });
 document.addEventListener('mousemove', function(e){
   if(pie.activo && pie.bloqueo) mirar(e.movementX, e.movementY, 0.0022);
@@ -4777,7 +4783,7 @@ function pintaLlevar(){
   btnLlevar.setAttribute('aria-pressed', String(!!LL));
   btnLlevar.textContent = LL ? 'Dejar ' + LL.e.id : 'Mover lo que miras';
   pieEstado.textContent = LL ? 'Llevando ' + LL.e.id + ': rueda gira · R/F altura · M o clic deja · Esc lo devuelve · Supr elimina'
-                             : (pie.bloqueo ? 'Paseando' : 'Haz clic o arrastra para mirar');
+                             : (pie.bloqueo ? 'Paseando' : ayudaMirar());
 }
 function coger(){
   if(LL){ soltar(false); return; }
@@ -4903,6 +4909,7 @@ redim(); actualizarSol();
 /* ?pie=x,z,rumbo entra directamente en el paseo (rumbo en grados, 0 = norte, 90 = este) */
 if(QS.has('pie')){ var qp = num('pie'); entrarPie(qp[0], qp[1], -d2r(qp[2] || 0)); }
 verIds = QS.has('ids');
+if(matchMedia('(pointer: coarse)').matches) ponTactil();
 if(QS.has('id')) irAId(QS.get('id'));
 /* Al recargar, se vuelve a donde se estaba: la cámara (o el paseo), la versión, las capas y las
    luces de fuera. Se guarda en el navegador cada segundo y al cerrar; la hora no (siempre abre a
