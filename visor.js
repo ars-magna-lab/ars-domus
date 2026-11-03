@@ -4946,7 +4946,8 @@ document.getElementById('cargando').hidden = true;
    plano: ruta [[x,y,z, mx,my,mz], …] (curva suave repartida en _dura, con arranque y frenada), tiempos
    (fracción de _dura de cada punto), curva ('suave' | 'lineal'), vista (id de VISTAS), version, capas
    {nombre: bool}, hora (horas, o [desde, hasta] para que el sol se mueva), fecha ('21dic'), luces
-   ('todo': todas encendidas), fov y suave ('ambas', 'entrada', 'salida' o 'no': dónde acelera y frena). */
+   ('todo': todas encendidas), fov, suave ('ambas', 'entrada', 'salida' o 'no': dónde acelera y frena) y
+   sombras (sí por defecto; false las quita). */
 (function(){
   var toma = {}, cPos = null, cMira = null;
   function esperaTexturas(){
@@ -4977,6 +4978,9 @@ document.getElementById('cargando').hidden = true;
       Object.keys(toma.capas || {}).forEach(function(k){ if(capas[k]) ponCapa(k, !!toma.capas[k]); });
       if(toma.fecha){ var f = FECHAS.filter(function(x){ return x.txt.replace(' ', '') === toma.fecha; })[0]; if(f) fechaSel = f; }
       if(toma.luces === 'todo' && !LZ.todo) btnTodo.click();
+      // las tomas llevan sombras salvo `sombras: false` (dentro, sin ellas, entra más luz)
+      var cs = document.getElementById('opt-sombras'), sm = toma.sombras !== false;
+      if(cs.checked !== sm){ cs.checked = sm; cs.dispatchEvent(new Event('change')); }
       var ruta = toma.ruta || [];
       if(ruta.length){
         var V = function(a, i){ return new THREE.Vector3(a[i], a[i+1], a[i+2]); };
