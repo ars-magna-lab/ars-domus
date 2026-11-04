@@ -177,7 +177,7 @@ MUEBLES = [
     M('chimenea', 0.3, 4.5, 90),
     M('alfombra', 2.6, 3.0, 90, ancho=2.4, largo=3.0, color='#d8cbb3', borde='#8a6f55'),
     M('sofa_tela', 4.15, 3.0, -90, largo=2.6, color=LINO),
-    M('butaca_tela', 2.0, 0.95, 160, color='#8a9a7b'),
+    M('butaca_tela', 2.0, 0.95, 20, color='#8a9a7b'),
     M('mesa_centro', 2.6, 3.0, 90, largo=1.1, fondo=0.6, color=ROBLE),
     M('libreria', 4.3, 0.4, 0, ancho=1.3, alto=2.3, color='#efe9df'),          # entre las dos ventanas
     M('lampara_pie', 4.9, 1.2),

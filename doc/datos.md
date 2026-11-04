@@ -118,7 +118,8 @@ que las enciende, para las de fuera).
 
 Tipos de mueble: ver `NOMBRE_MUEBLE` y `MUEBLE` en `visor.js`. Hay de casa (sofás, camas, cocina, baño,
 oficina, armarios…), de jardín (tumbonas, pérgolas, barbacoas, bancales, hamaca, emparrado…), coches y, para
-soñar, superdeportivos, helipuerto, pádel, jacuzzi, chiringuito, cine, fuente con estatua, sauna y green.
+soñar, superdeportivos, helipuerto, pádel, jacuzzi, chiringuito, cine, fuente con estatua, sauna, green y una réplica
+de la torre Eiffel (`torre_eiffel`, `alto` en metros: 10 por defecto).
 
 ### `exterior`
 
