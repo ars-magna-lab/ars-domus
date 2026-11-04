@@ -119,4 +119,6 @@ def lujo():
     for x in (-3.0, 1.5, 4.5, 9.5):
         n += 1
         piezas.append(L(n, 'topiario', x, 4.3, forma='cono', idea='Conos de boj delante del porche.'))
+    piezas.append(L(n + 1, 'torre_eiffel', 26.9, 8.6, 0, alto=10.0, cota=0.0,
+                    idea='Réplica de la torre Eiffel, de 10 m (1:32), al E de la casa.'))
     return piezas
