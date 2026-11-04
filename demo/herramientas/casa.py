@@ -180,7 +180,7 @@ MUEBLES = [
     M('butaca_tela', 2.0, 0.95, 160, color='#8a9a7b'),
     M('mesa_centro', 2.6, 3.0, 90, largo=1.1, fondo=0.6, color=ROBLE),
     M('libreria', 4.3, 0.4, 0, ancho=1.3, alto=2.3, color='#efe9df'),          # entre las dos ventanas
-    M('lampara_pie', 4.3, 3.0),
+    M('lampara_pie', 4.9, 1.2),
     M('mesa_madera', 4.3, 6.9, 90, largo=2.0, fondo=0.95, color=ROBLE),
     *[M('silla_madera', u, v, g, color='#6e5a48') for u in (3.75, 4.85) for v, g in ((6.2, 0), (7.6, 180))],
     M('silla_madera', 3.35, 6.9, 90, color='#6e5a48'), M('silla_madera', 5.25, 6.9, -90, color='#6e5a48'),
