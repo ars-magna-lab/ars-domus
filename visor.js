@@ -2711,11 +2711,46 @@ Object.assign(MUEBLE, {
   palmera_alta: function(g, m){                                       // palmera de porte: la enana, a escala
     var s = new THREE.Group(), k = (m.alto || 6)/2.6; s.scale.setScalar(k); g.add(s);
     MUEBLE.palmera(s, {alto:2.6});
+  },
+  torre_eiffel: function(g, m){                                       // torre de celosía de cuatro patas curvas, a escala (m.alto)
+    var H = m.alto || 10, hi = lc(m.color || '#6b5a45'), r = Math.max(0.012, H*0.0025);
+    // perfil: [altura, medio ancho] relativos a H; plataformas a 0.18, 0.36 y 0.85
+    var P = [[0, 0.193], [0.09, 0.145], [0.18, 0.108], [0.27, 0.08], [0.36, 0.058], [0.5, 0.038], [0.65, 0.026], [0.85, 0.016]];
+    function barra(a, b, rr){
+      var v = b.clone().sub(a), t = cil(g, rr, rr, v.length(), hi, 0, 0, 0, 6);
+      t.position.copy(a).add(b).multiplyScalar(0.5); t.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.normalize());
+    }
+    function esq(i, sx, sz){ var w = P[i][1]*H; return new THREE.Vector3(sx*w, P[i][0]*H, sz*w); }
+    var Q = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
+    for(var i = 0; i < P.length - 1; i++){
+      var rr = r*(i < 2 ? 3 : i < 4 ? 2.2 : 1.6);
+      Q.forEach(function(q, k){
+        var n = Q[(k + 1) % 4], a0 = esq(i, q[0], q[1]), a1 = esq(i + 1, q[0], q[1]);
+        barra(a0, a1, rr);                                            // la pata
+        if(i >= 2){                                                   // celosía en cruz en cada cara (abajo van los arcos)
+          barra(a0, esq(i + 1, n[0], n[1]), r); barra(a1, esq(i, n[0], n[1]), r);
+        }
+      });
+    }
+    Q.forEach(function(q, k){                                         // los arcos de la base, de pata a pata
+      var n = Q[(k + 1) % 4], N = 10, prev = null;
+      for(var j = 0; j <= N; j++){
+        var s = j/N, y = (0.08 + 0.055*Math.sin(Math.PI*s))*H, f = y/(0.18*H), w = (0.193 - (0.193 - 0.108)*f)*H;
+        var p = new THREE.Vector3(q[0]*w*(1 - s) + n[0]*w*s, y, q[1]*w*(1 - s) + n[1]*w*s);
+        // en los extremos, el arco se apoya en la pata a esa altura
+        if(prev) barra(prev, p, r*1.6); prev = p;
+      }
+    });
+    [[0.18, 0.11, 0.02], [0.36, 0.062, 0.016], [0.85, 0.022, 0.012]].forEach(function(p){   // las tres plataformas
+      var w = p[1]*H*2; pz(g, w, p[2]*H, w, hi, 0, p[0]*H, 0);
+    });
+    pz(g, 0.03*H, 0.05*H, 0.03*H, hi, 0, 0.885*H, 0);                 // la linterna de arriba
+    cil(g, r*1.5, r*2.5, 0.09*H, hi, 0, 0.955*H, 0, 8);              // y la antena
   }
 });
 Object.assign(NOMBRE_MUEBLE, {deportivo:'Superdeportivo', pergola_bio:'Pérgola bioclimática', helipuerto:'Helipuerto', padel:'Pista de pádel',
   jacuzzi:'Jacuzzi', chiringuito:'Chiringuito', cine:'Cine al aire libre', fuente_estatua:'Fuente con estatua dorada',
-  sauna_barril:'Sauna de barril', bandera_golf:'Hoyo del green', palmera_alta:'Palmera'});
+  sauna_barril:'Sauna de barril', bandera_golf:'Hoyo del green', palmera_alta:'Palmera', torre_eiffel:'Réplica de la torre Eiffel'});
 function construyeMueble(m, padre){
   // fuera de las estancias (jardín, piscina, porches abiertos) el suelo es la cota que diga, o el terreno
   // lo que lleva `mundo` va fuera, en el grupo exterior de su versión y en coordenadas del mundo
@@ -4944,6 +4979,17 @@ function recuperaVista(){
 }
 var CINE = QS.has('cine');
 if(!CINE && !['vista', 'desde', 'pie', 'id', 'limpio'].some(function(k){ return QS.has(k); })) recuperaVista();
+/* Esos parámetros mandan solo al abrir: se quitan de la URL para que al recargar (también la recarga
+   sola al regenerar casa.js) se vuelva a donde se estaba, no a donde decía el enlace. */
+if(!CINE){
+  try{
+    var qL = new URLSearchParams(location.search), quita = ['vista', 'desde', 'hacia', 'fov', 'pie', 'id', 'limpio'];
+    if(quita.some(function(k){ return qL.has(k); })){
+      quita.forEach(function(k){ qL.delete(k); });
+      var qs = qL.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+    }
+  }catch(e){}
+}
 if(!CINE){ setInterval(guardaVista, 1000); addEventListener('pagehide', guardaVista); bucle(); }
 document.getElementById('cargando').hidden = true;
 
