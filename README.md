@@ -16,6 +16,11 @@ Ars Magna.*
 **Demo:** [ars-domus.arsmagnalab.com](https://ars-domus.arsmagnalab.com), una casa inventada
 («El Olivar») con su versión actual y una mejorada en la que soñar es gratis.
 
+**Vídeo:** [Reforma tu casa en 3D con Claude Code](https://www.youtube.com/watch?v=480Ta170Xg8),
+cómo se hace paso a paso (en castellano).
+
+[![Miniatura del vídeo: la casa antes y después, con la tecla V](doc/img/video.jpg)](https://www.youtube.com/watch?v=480Ta170Xg8)
+
 ![La casa de ejemplo vista desde arriba, sin tejado, con el panel del visor](doc/img/vista.jpg)
 
 ## Qué sale
